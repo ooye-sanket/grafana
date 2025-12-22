@@ -103,6 +103,22 @@ LIMIT
     timeRange: metadata?.range,
   });
 
+  const handleEditorWheel = useCallback((e: React.WheelEvent<HTMLDivElement>) => {
+    const element = e.currentTarget;
+    const isScrollingHorizontally = Math.abs(e.deltaX) > Math.abs(e.deltaY);
+    
+    if (isScrollingHorizontally) {
+      const isAtLeftEdge = element.scrollLeft === 0 && e.deltaX < 0;
+      const isAtRightEdge = 
+        element.scrollLeft + element.clientWidth >= element.scrollWidth && e.deltaX > 0;
+      
+      // Only prevent propagation if we're not at scroll boundaries
+      if (!isAtLeftEdge && !isAtRightEdge) {
+        e.stopPropagation();
+      }
+    }
+  }, []);
+
   const queryContext = useMemo(
     () => ({
       alerting,
@@ -245,6 +261,7 @@ LIMIT
       className={cx(styles.contentContainer, {
         [styles.contentContainerWithSchema]: isSchemaInspectorOpen && isSchemasFeatureEnabled,
       })}
+      onWheel={handleEditorWheel}  // FIX: Add wheel event handler
     >
       <div className={styles.editorContainer}>
         <AutoSizer>
@@ -332,6 +349,7 @@ const getStyles = (theme: GrafanaTheme2) => ({
     height: '100%',
     width: '100%',
     overflow: 'auto',
+    overscrollBehaviorX: 'contain',  // FIX: Prevent scroll chaining
   }),
   schemaInspector: css({
     gridArea: 'schema',
